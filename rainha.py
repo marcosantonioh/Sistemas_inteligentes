@@ -1,65 +1,129 @@
 import random
 
-# Função para verificar se a posição (linha, coluna) é segura para colocar uma rainha
-def eh_seguro(tabuleiro, linha, coluna, n):
-    # Verificar se há uma rainha na mesma coluna
-    for i in range(linha):
-        if tabuleiro[i][coluna] == 1:
+
+#######################################################
+
+
+def iniciar_tabuleiro(tam):
+    return [[0 for _ in range(tam)] for _ in range(tam)]
+
+
+#######################################################
+
+def posicionar_primeira_rainha(tabuleiro, tam):
+    linha = random.randint(0, tam-1)
+    coluna = random.randint(0, tam-1)
+    tabuleiro[linha][coluna] = 1
+    return linha, coluna
+
+
+
+#######################################################
+
+
+
+def imprimir_tabuleiro(tabuleiro, tam):
+    for l in range(tam):
+        for c in range(tam):
+            if tabuleiro[l][c] == 1:
+                print(" R ", end="")  # Rainha representada por 'R'
+            else:
+                print(" . ", end="")  # Espaço vazio representado por '.'
+        print()  # Pular linha após cada linha do tabuleiro
+
+
+
+#######################################################
+
+
+
+# Verifica se é seguro posicionar uma rainha na posição (linha, coluna)
+def posicao_segura(tabuleiro, linha, coluna, tam):
+    # Verifica a linha
+    for c in range(tam):
+        if tabuleiro[linha][c] == 1:
+            return False
+    
+    # Verifica a coluna
+    for l in range(tam):
+        if tabuleiro[l][coluna] == 1:
             return False
 
-    # Verificar a diagonal superior esquerda
-    for i, j in zip(range(linha, -1, -1), range(coluna, -1, -1)):
-        if tabuleiro[i][j] == 1:
+    # Verifica a diagonal principal
+    for i in range(tam):
+        if linha - i >= 0 and coluna - i >= 0 and tabuleiro[linha - i][coluna - i] == 1:
+            return False
+        if linha + i < tam and coluna + i < tam and tabuleiro[linha + i][coluna + i] == 1:
             return False
 
-    # Verificar a diagonal superior direita
-    for i, j in zip(range(linha, -1, -1), range(coluna, n)):
-        if tabuleiro[i][j] == 1:
+    # Verifica a diagonal secundária
+    for i in range(tam):
+        if linha - i >= 0 and coluna + i < tam and tabuleiro[linha - i][coluna + i] == 1:
+            return False
+        if linha + i < tam and coluna - i >= 0 and tabuleiro[linha + i][coluna - i] == 1:
             return False
 
     return True
 
-# Função para resolver o problema das 8 rainhas utilizando backtracking
-def resolver_rainhas(tabuleiro, linha, n):
-    if linha >= n:
-        return True
 
-    for coluna in range(n):
-        if eh_seguro(tabuleiro, linha, coluna, n):
-            tabuleiro[linha][coluna] = 1
 
-            if resolver_rainhas(tabuleiro, linha + 1, n):
-                return True
+#######################################################
 
-            # Backtracking: remover a rainha e tentar a próxima posição
-            tabuleiro[linha][coluna] = 0
+
+
+# Backtracking para posicionar as rainhas restantes
+def posicionar_rainhas(tabuleiro, rainhas, tam, posicoes):
+    if rainhas == 0:
+        return True  # Todas as rainhas foram posicionadas
+
+    for linha in range(tam):
+        for coluna in range(tam):
+            if tabuleiro[linha][coluna] == 0 and posicao_segura(tabuleiro, linha, coluna, tam):
+                # Posiciona a rainha
+                tabuleiro[linha][coluna] = 1
+                posicoes.append((linha, coluna))
+                rainhas -= 1
+
+                # Tenta posicionar as próximas rainhas
+                if posicionar_rainhas(tabuleiro, rainhas, tam, posicoes):
+                    return True
+
+                # Backtracking: remove a rainha e tenta outra posição
+                rainhas += 1
+                tabuleiro[linha][coluna] = 0
+                posicoes.pop()
 
     return False
 
-# Função para desenhar o tabuleiro de xadrez
-def desenhar_tabuleiro(tabuleiro, n):
-    for linha in range(n):
-        for coluna in range(n):
-            if tabuleiro[linha][coluna] == 1:
-                print('W', end=' ')
-            else:
-                print('-', end=' ')
-        print()
+
+#######################################################
+
 
 # Função principal
-def main():
-    n = 8  # Tamanho do tabuleiro (8x8)
-    tabuleiro = [[0 for _ in range(n)] for _ in range(n)]
+def resolver_n_rainhas(tam):
+    tabuleiro = iniciar_tabuleiro(tam)
+    posicoes = []
 
-    # Colocar a primeira rainha em uma posição aleatória na primeira linha
-    primeira_coluna = random.randint(0, n - 1)
-    tabuleiro[0][primeira_coluna] = 1
+    # Posiciona a primeira rainha aleatoriamente
+    linha, coluna = posicionar_primeira_rainha(tabuleiro, tam)
+    print(f"Primeira posição: Rainha colocada em ({linha}, {coluna})\n")
+    imprimir_tabuleiro(tabuleiro, tam)
+    posicoes.append((linha, coluna))
+    rainhas = tam - 1  # Restam N-1 rainhas para posicionar
 
-    # Resolver o restante do tabuleiro a partir da segunda linha
-    if resolver_rainhas(tabuleiro, 1, n):  # Começar da segunda linha
-        desenhar_tabuleiro(tabuleiro, n)
+    # Tenta posicionar as demais rainhas
+    if posicionar_rainhas(tabuleiro, rainhas, tam, posicoes):
+        print("\nSolução encontrada:\n")
+        imprimir_tabuleiro(tabuleiro, tam)
     else:
-        print("Não há solução.")
+        print("Nenhuma solução encontrada")
 
-if __name__ == "__main__":
-    main()
+
+
+#######################################################
+
+# Main
+tam = 8
+tabuleiro = iniciar_tabuleiro(tam)
+
+resolver_n_rainhas(tam)
